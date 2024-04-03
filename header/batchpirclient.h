@@ -19,7 +19,8 @@ public:
     std::pair<seal::GaloisKeys, seal::RelinKeys> get_public_keys();
     bool cuckoo_hash_witout_checks(vector<uint64_t> batch);
     vector<uint64_t> get_cuckoo_table();
-    size_t get_serialized_commm_size();
+    size_t get_serialized_comm_size_query();
+    size_t get_serialized_comm_size_response();
     
 
 private:
@@ -30,9 +31,10 @@ private:
     bool is_map_set_;
     std::unordered_map<std::string, uint64_t> map_;
     vector<Client> client_list_;
-    size_t serialized_comm_size_ = 0;
+    size_t serialized_comm_size_query_ = 0;
+    size_t serialized_comm_size_response_ = 0;
 
-    void measure_size(vector<Ciphertext> list, size_t seeded = 1);
+    void measure_size(vector<Ciphertext> list, size_t seeded, bool is_query);
     bool cuckoo_hash(vector<uint64_t> batch);
     void translate_cuckoo();
     void prepare_pir_clients();

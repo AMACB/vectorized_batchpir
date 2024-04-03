@@ -151,15 +151,15 @@ int batchpir_main(int argc, char* argv[])
     const int client_id = 0;
     //  batch size, number of entries, size of entry
     std::vector<std::array<size_t, 3>> input_choices;
-    input_choices.push_back({32, 1048576, 32});
-    input_choices.push_back({64, 1048576, 32});
-    input_choices.push_back({256, 1048576, 32});
-    
+    input_choices.push_back({32, 1048576, 256});
+    // input_choices.push_back({64, 1048576, 256});
+    // input_choices.push_back({256, 1048576, 256});
 
     std::vector<std::chrono::milliseconds> init_times;
     std::vector<std::chrono::milliseconds> query_gen_times;
     std::vector<std::chrono::milliseconds> resp_gen_times;
-    std::vector<size_t> communication_list;
+    std::vector<size_t> communication_list_query;
+    std::vector<size_t> communication_list_response;
 
  for (size_t iteration = 0; iteration < input_choices.size(); ++iteration)
 {
@@ -213,7 +213,8 @@ int batchpir_main(int argc, char* argv[])
     cout << "Main: Checking decoded entries for example " << (iteration + 1) << "..." << endl;
     auto decode_responses = batch_client.decode_responses_chunks(responses);
 
-    communication_list.push_back(batch_client.get_serialized_commm_size());
+    communication_list_query.push_back(batch_client.get_serialized_comm_size_query());
+    communication_list_response.push_back(batch_client.get_serialized_comm_size_response());
 
     auto cuckoo_table = batch_client.get_cuckoo_table();
 
@@ -239,7 +240,8 @@ int batchpir_main(int argc, char* argv[])
         cout << "Initialization time: " << init_times[i].count() << " milliseconds" << endl;
         cout << "Query generation time: " << query_gen_times[i].count() << " milliseconds" << endl;
         cout << "Response generation time: " << resp_gen_times[i].count() << " milliseconds" << endl;
-        cout << "Total communication: " << communication_list[i] << " KB" << endl;
+        cout << "Total communication (query): " << communication_list_query[i] << " KB" << endl;
+        cout << "Total communication (response): " << communication_list_response[i] << " KB" << endl;
         cout << endl;
     }
 

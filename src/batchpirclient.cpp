@@ -59,7 +59,7 @@ vector<PIRQuery> BatchPIRClient::create_queries(vector<uint64_t> batch)
         vector<uint64_t> sub_buckets(cuckoo_table_.begin() + previous_idx, cuckoo_table_.begin() + previous_idx + offset);
         previous_idx += offset;
         auto query = client_list_[i].gen_query(sub_buckets);
-        measure_size(query, 2);
+        measure_size(query, 2, true);
         queries.push_back(query);
     }
 
@@ -163,16 +163,22 @@ bool BatchPIRClient::cuckoo_hash_witout_checks(vector<uint64_t> batch)
     return true;
 }
 
-void BatchPIRClient::measure_size(vector<Ciphertext> list, size_t seeded){
-
-
+void BatchPIRClient::measure_size(vector<Ciphertext> list, size_t seeded, bool is_query){
     for (int i=0; i < list.size(); i++){
-    serialized_comm_size_ += ceil(list[i].save_size()/seeded);
+        if (is_query) {
+            serialized_comm_size_query_ += ceil(list[i].save_size()/seeded);
+        } else {
+            serialized_comm_size_response_ += ceil(list[i].save_size()/seeded);
+        }
     }
 }
 
-size_t BatchPIRClient::get_serialized_commm_size(){
-    return ceil(serialized_comm_size_/1024);
+size_t BatchPIRClient::get_serialized_comm_size_query(){
+    return ceil(serialized_comm_size_query_/1024);
+}
+
+size_t BatchPIRClient::get_serialized_comm_size_response(){
+    return ceil(serialized_comm_size_response_/1024);
 }
 
 
@@ -261,7 +267,7 @@ vector<RawDB> BatchPIRClient::decode_responses_chunks(PIRResponseList responses)
     const size_t row_size = batchpir_params_.get_seal_parameters().poly_modulus_degree() / 2;
     const size_t gap = row_size / max_empty_slots;
 
-    measure_size(responses, 1);
+    measure_size(responses, 1, false);
 
     auto current_fill = gap * num_slots_per_entry_rounded;
     size_t num_buckets_merged = (row_size / current_fill);
